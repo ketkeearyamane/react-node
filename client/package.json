@@ -11,7 +11,8 @@
     "react-scripts": "1.1.4",
     "react-bootstrap-table" :"*",
     "react-datepicker":"*",
-    "moment":"*"
+    "moment":"*",
+    "react-checkbox-group":"*"
 
   },
   "scripts": {

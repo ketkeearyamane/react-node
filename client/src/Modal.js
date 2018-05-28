@@ -1,54 +1,50 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 
-class Modal extends React.Component {
+class Modal extends Component {
   render() {
-    // Render nothing if the "show" prop is false
-    if(!this.props.show) {
-      return null;
-    }
+        if (this.props.isOpen === false){
+          return null
+        }
 
-    // The gray background
-    const backdropStyle = {
-      position: 'fixed',
-      top: 0,
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: 'rgba(0,0,0,0.3)',
-      padding: 50
-    };
+        let modalStyle = {
+          width: '300px',
+          height: '300px',
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          marginTop: '-150px',
+          marginLeft: '-150px',
+          zIndex: '9999',
+          background: 'white'
+        }
 
-    // The modal "window"
-    const modalStyle = {
-      backgroundColor: '#fff',
-      borderRadius: 5,
-      maxWidth: 300,
-      minHeight: 200,
-      margin: '0 auto',
-      padding: 10
-    };
 
-    return (
-      <div className="backdrop" style={backdropStyle}>
-        <div className="modal" style={modalStyle}>
-          {this.props.children}
+        let backdropStyle = {
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          top: '0px',
+          left: '0px',
+          zIndex: '9998',
+          background: 'rgba(0, 0, 0, 0.3)'
+        }
 
-          <div className="footer">
-            <button onClick={this.props.onClose}>
-              Close
-            </button>
-          </div>
-        </div>
+
+        return (
+          <div>
+        <div style={modalStyle}>{this.props.children}</div>
+        <div style={backdropStyle} onClick={e => this.close(e)}/>
       </div>
-    );
-  }
-}
+        )
+      }
 
-Modal.propTypes = {
-  onClose: PropTypes.func.isRequired,
-  show: PropTypes.bool,
-  children: PropTypes.node
-};
+      close(e) {
+        e.preventDefault()
+
+        if (this.props.onClose) {
+          this.props.onClose()
+        }
+      }
+    }
 
 export default Modal;

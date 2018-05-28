@@ -3,6 +3,9 @@ import './App.css';
 import DatePicker from 'react-datepicker';
 import moment from 'moment';
 import 'react-datepicker/dist/react-datepicker.css';
+import Modal from './Modal';
+
+
 var ReactBsTable = require('react-bootstrap-table');
 var BootstrapTable = ReactBsTable.BootstrapTable;
 var TableHeaderColumn = ReactBsTable.TableHeaderColumn;
@@ -14,11 +17,23 @@ class App extends Component {
   super();
   // default State object
   this.state = {
-    contacts: [], startDate: moment(), endDate: moment(), prio:'', cat:'',
-    event:'', action:'', ip:''
+    logs: [], startDate: moment(), endDate: moment(), prio:'', cat:'',
+    event:'', action:'', ip:'', isModalOpen:false,
+    options:{'one':true, 'two':false, 'three':false}
   };
-  this.handlePrioChange = this.handlePrioChange.bind(this);
+
 }
+
+//modal open and close
+  openModal = ()=> {
+      this.setState({ isModalOpen: true })
+    }
+
+    closeModal =()=> {
+      this.setState({ isModalOpen: false })
+    }
+
+
 
 handleBtnClick = () => {
    if (order === 'desc') {
@@ -31,7 +46,7 @@ handleBtnClick = () => {
  }
 
   handleStartDateChange =(value)=> {
-    console.log(value)
+
     this.setState({startDate:value});
   }
   handleEndDateChange =(value)=> {
@@ -52,39 +67,50 @@ handleBtnClick = () => {
    handleIPChange =(event)=> {
      this.setState({ip:event.target.value});
    }
-   //find
+
+   //checkbox event handlers for modal window checkboxes
+   handleCheck =(event)=> {
+     console.log("just came in: "+this.state.options+" props value:: "+event.target.value)
+     const options = this.state.options;
+     let index
+     options[event.target.value]=event.target.checked;
+     console.log(options)
+     // update the state with the new array of server options
+     this.setState({ options: options });
+   }
+
+
+   //the "find" button call
    handleServiceCall =()=> {
-      console.log(this.state.endDate.format())
-      console.log(this.state.endDate.format())
-      console.log(this.state.prio)
-      console.log(this.state.event)
-      console.log(this.state.action)
-      console.log(this.state.ip)
+
     //call service
-    this.getDataFromService('startDate='+this.state.startDate.format()
-  +'&endDate='+this.state.endDate.format()
+    this.getDataFromService('startDate='+this.state.startDate.format('YYYY-MM-DD[T]HH:mm:ss')+'Z'
+  +'&endDate='+this.state.endDate.format('YYYY-MM-DD[T]HH:mm:ss')+'Z'
   +'&prio='+this.state.prio
   +'&cat='+this.state.cat
   +'&event='+this.state.event
   +'&action='+this.state.action
-  +'&ip='+this.state.ip)
-     }
+  +'&ip='+this.state.ip
+  +'&servers='+this.state.options['one']+','+this.state.options['two']+','+this.state.options['three'])
+}
+
+    //calling the nodejs server with query params
     getDataFromService=(query)=>{
-      return fetch('/api/hello?'+query)
+      return fetch('/api/getData?'+query)
       .then((response) => response.json())
       .then(responseJson => {
-
-          // create an array of contacts only with relevant data
-          const newContacts =responseJson.map(c => {
+          // create an array of logs only with relevant data
+          const newlogs =responseJson.map(c => {
             return (
               {"prio":c.prio, "time":c.time, "event":c.event, "cat":c.cat,
                 "ip": c.ip, "message":c.message, "action":c.action}
             );
           });
-          this.setState({contacts:newContacts});
+          this.setState({logs:newlogs});
         })
         .catch(error => console.log(error));
     }
+
 
     //first time load.
   componentWillMount() {
@@ -92,8 +118,10 @@ handleBtnClick = () => {
   }
 
   render() {
+    //options configured for pagination
     const options={
       sizePerPage: 50,
+      paginationPosition: 'top',
       sizePerPageList: [ {
         text: '30', value: 30
       }, {
@@ -107,29 +135,38 @@ handleBtnClick = () => {
     }
 
     return (
-
       <div className="App">
+      <div className="row">
+      <div className="col-sm-2" style={{'marginTop':'15px'}}><button className="btn btn-default" onClick={this.openModal}>Log Sources</button> </div>
+
+      </div>
+      <br/>
+      <div className="form-group">
+            {/* definition for  button "Log Sources" and modal component*/}
+
+            <Modal isOpen={this.state.isModalOpen} onClose={this.closeModal}>
+              <h1>Log Sources</h1>
+              <form style={{"padding":"5px"}}>
+              <div className="checkbox">
+                <label><input type="checkbox" value="one"  onChange={this.handleCheck} defaultChecked={this.state.options['one']}/>Server 1</label><br/>
+                <label><input type="checkbox" value="two"  onChange={this.handleCheck} defaultChecked={this.state.options['two']}/>Server 2</label><br/>
+                <label><input type="checkbox" value="three"  onChange={this.handleCheck} defaultChecked={this.state.options['three']}/>Server 3</label>
+                </div>
+              </form>
+              <p><button onClick={this.closeModal}>Close</button></p>
+            </Modal>
+          </div>
 
 
-      <table className="table table-dark">
-      <thead>
-      <tr>
-      <th scope="col"><button>Log Sources</button></th>
-
-      </tr>
-      </thead>
-      </table>
-
-
-
-      <div id="searchBar"  >
-      <div style={{'display': 'inline-block'}}>
-        <DatePicker  selected={this.state.startDate} onChange={this.handleStartDateChange}/>
+          {  /* definition for search criteria*/}
+      <div id="searchBar">
+      <div style={{'display': 'inline-block'}} >
+        <DatePicker selected={this.state.startDate} onChange={this.handleStartDateChange}/>
         </div>
-        <div style={{'display': 'inline-block','padding':'2px'}}>
+        <div style={{'display': 'inline-block','padding':'2px'}} >
           <label>to</label>
           </div>
-        <div style={{'display': 'inline-block', 'padding':'5px'}}>
+        <div style={{'display': 'inline-block', 'padding':'5px'}} >
         <DatePicker selected={this.state.endDate} onChange={this.handleEndDateChange}/>
         </div>
         <div style={{'display': 'inline-block', 'padding':'5px'}}>
@@ -153,13 +190,13 @@ handleBtnClick = () => {
         value={this.state.ip} onChange={this.handleIPChange}/>
         </div>
         <div style={{'display': 'inline-block','padding':'2px'}}>
-        <button onClick={this.handleServiceCall}>Find</button>
+        <button className="btn btn-default" onClick={this.handleServiceCall}>Find</button>
         </div>
       </div>
       <br/><br/>
 
-
-      <BootstrapTable ref='table' data={this.state.contacts} striped hover condensed pagination options={options} >
+      {/* results table with pagination controls and sorting*/}
+      <BootstrapTable ref='table' data={this.state.logs} striped hover condensed pagination options={options} >
       <TableHeaderColumn dataField='time' dataSort={ true } >Time</TableHeaderColumn>
       <TableHeaderColumn dataSort={ true }  dataField='ip'  isKey>IP</TableHeaderColumn>
        <TableHeaderColumn dataSort={ true }  dataField='prio'  >Priority</TableHeaderColumn>
