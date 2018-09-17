@@ -15,3 +15,5 @@ Navigate to /client directory which contains the react-js based client-side code
 `npm start`
 
 Open http://localhost:3000 if the browser is not automatically opened for you.
+Testing.
+
